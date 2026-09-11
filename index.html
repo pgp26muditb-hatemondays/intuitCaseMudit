@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IES Nexus</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #f5f6fa;
+    --sidebar-bg: #1a1f36;
+    --sidebar-text: #a0a3b1;
+    --sidebar-active: #ffffff;
+    --card-bg: #ffffff;
+    --primary: #0077c5;
+    --primary-light: #e8f4fd;
+    --success: #2ca01c;
+    --success-light: #e8f8e5;
+    --warning: #f5a623;
+    --warning-light: #fef6e8;
+    --danger: #d13b3b;
+    --danger-light: #fde8e8;
+    --text: #1a1f36;
+    --text-secondary: #6b7280;
+    --border: #e5e7eb;
+    --purple: #7c3aed;
+    --purple-light: #f3e8ff;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1117;
+      --sidebar-bg: #1a1f36;
+      --card-bg: #1e2235;
+      --text: #e5e7eb;
+      --text-secondary: #9ca3af;
+      --border: #374151;
+      --primary-light: #0c2d4a;
+      --success-light: #0c2d12;
+      --warning-light: #3d2a0a;
+      --danger-light: #3d1212;
+      --purple-light: #2d1654;
+      --shadow: 0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg: 0 10px 15px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1117;
+    --sidebar-bg: #1a1f36;
+    --card-bg: #1e2235;
+    --text: #e5e7eb;
+    --text-secondary: #9ca3af;
+    --border: #374151;
+    --primary-light: #0c2d4a;
+    --success-light: #0c2d12;
+    --warning-light: #3d2a0a;
+    --danger-light: #3d1212;
+    --purple-light: #2d1654;
+    --shadow: 0 1px 3px rgba(0,0,0,.3);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,.4);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; padding: 0; }
+  h1, h2, .card-title, .kpi-value, .page-header h1, .modal h2, .step-title, .mc-name, .node-title { font-family: 'Outfit', -apple-system, sans-serif; }
+  code, pre, .monospace, [style*="monospace"] { font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace; }
+
+  /* Sidebar */
+  .sidebar { width: 260px; background: var(--sidebar-bg); padding: 24px 16px; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 8px 24px; border-bottom: 1px solid rgba(255,255,255,.1); margin-bottom: 24px; }
+  .sidebar-logo svg { width: 32px; height: 32px; }
+  .sidebar-logo span { color: #fff; font-size: 18px; font-weight: 700; letter-spacing: -.5px; }
+  .sidebar-logo .badge { font-size: 10px; background: var(--primary); color: #fff; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .nav-section { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,.35); padding: 0 12px; margin: 20px 0 8px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: var(--sidebar-text); border-radius: 8px; cursor: pointer; font-size: 14px; transition: all .15s; margin-bottom: 2px; }
+  .nav-item:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .nav-item.active { background: rgba(0,119,197,.25); color: #fff; font-weight: 600; }
+  .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .nav-item .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); margin-left: auto; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+  .sidebar-footer { margin-top: auto; padding: 16px 12px; border-top: 1px solid rgba(255,255,255,.1); }
+  .user-info { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--purple)); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; }
+  .user-info .name { color: #fff; font-size: 13px; font-weight: 600; }
+  .user-info .role { color: var(--sidebar-text); font-size: 11px; }
+
+  /* Main content */
+  .main { flex: 1; margin-left: 260px; padding: 24px 32px; max-width: 1200px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Header */
+  .page-header { margin-bottom: 24px; }
+  .page-header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; text-wrap: balance; letter-spacing: -.3px; }
+  .page-header p { color: var(--text-secondary); font-size: 14px; }
+  .header-row { display: flex; align-items: center; justify-content: space-between; }
+
+  /* Cards */
+  .card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .card-title { font-size: 15px; font-weight: 600; }
+
+  /* KPI row */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi-card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); padding: 20px; box-shadow: var(--shadow); }
+  .kpi-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+  .kpi-value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
+  .kpi-change { font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+  .kpi-change.up { color: var(--success); }
+  .kpi-change.down { color: var(--danger); }
+
+  /* Grid layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+
+  /* Agent activity feed */
+  .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .activity-icon.blue { background: var(--primary-light); color: var(--primary); }
+  .activity-icon.green { background: var(--success-light); color: var(--success); }
+  .activity-icon.orange { background: var(--warning-light); color: var(--warning); }
+  .activity-icon.purple { background: var(--purple-light); color: var(--purple); }
+  .activity-text { font-size: 13px; line-height: 1.5; }
+  .activity-text strong { font-weight: 600; }
+  .activity-time { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+  /* Progress bar */
+  .progress-bar { width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 1.5s ease; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: #005fa3; }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-success:hover { background: #228a17; }
+  .btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+  .btn-outline:hover { background: var(--primary-light); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn-lg { padding: 14px 28px; font-size: 16px; }
+
+  /* Badge / Tag */
+  .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: var(--success-light); color: var(--success); }
+  .badge-blue { background: var(--primary-light); color: var(--primary); }
+  .badge-orange { background: var(--warning-light); color: var(--warning); }
+  .badge-red { background: var(--danger-light); color: var(--danger); }
+  .badge-purple { background: var(--purple-light); color: var(--purple); }
+
+  /* Table */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-secondary); border-bottom: 2px solid var(--border); }
+  .data-table td { padding: 12px; border-bottom: 1px solid var(--border); }
+  .data-table tr:hover td { background: var(--primary-light); }
+
+  /* Close Agent Workflow */
+  .workflow-steps { position: relative; }
+  .step { display: flex; gap: 16px; margin-bottom: 0; padding: 20px 0; opacity: .4; transition: all .5s; }
+  .step.active, .step.complete { opacity: 1; }
+  .step-indicator { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .step-circle { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--text-secondary); transition: all .3s; }
+  .step.active .step-circle { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+  .step.complete .step-circle { border-color: var(--success); background: var(--success); color: #fff; }
+  .step-line { width: 2px; flex: 1; background: var(--border); min-height: 20px; }
+  .step.complete .step-line { background: var(--success); }
+  .step-content { flex: 1; padding-top: 8px; }
+  .step-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+  .step-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+  .step-detail { background: var(--bg); border-radius: 8px; padding: 16px; font-size: 13px; border: 1px solid var(--border); }
+  .step-detail.anomaly { border-left: 4px solid var(--warning); }
+  .step-detail.success { border-left: 4px solid var(--success); }
+
+  /* Typing animation */
+  .typing-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-secondary); margin: 0 2px; animation: typing .8s infinite; }
+  .typing-dot:nth-child(2) { animation-delay: .15s; }
+  .typing-dot:nth-child(3) { animation-delay: .3s; }
+  @keyframes typing { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+  /* Chat */
+  .chat-container { display: flex; flex-direction: column; height: 550px; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 16px 0; }
+  .chat-msg { display: flex; gap: 12px; margin-bottom: 16px; max-width: 85%; }
+  .chat-msg.user { margin-left: auto; flex-direction: row-reverse; }
+  .chat-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .chat-msg.ai .chat-avatar { background: linear-gradient(135deg, var(--primary), var(--purple)); color: #fff; }
+  .chat-msg.user .chat-avatar { background: var(--border); }
+  .chat-bubble { padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.6; }
+  .chat-msg.ai .chat-bubble { background: var(--card-bg); border: 1px solid var(--border); border-top-left-radius: 4px; }
+  .chat-msg.user .chat-bubble { background: var(--primary); color: #fff; border-top-right-radius: 4px; }
+  .chat-input-row { display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .chat-input { flex: 1; padding: 12px 16px; border-radius: 24px; border: 1px solid var(--border); background: var(--bg); font-size: 14px; color: var(--text); outline: none; }
+  .chat-input:focus { border-color: var(--primary); }
+  .chat-send { width: 44px; height: 44px; border-radius: 50%; background: var(--primary); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+  /* Agent Builder */
+  .builder-canvas { background: var(--bg); border: 2px dashed var(--border); border-radius: var(--radius); padding: 32px; min-height: 400px; position: relative; }
+  .agent-node { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; width: 200px; box-shadow: var(--shadow); position: relative; cursor: move; }
+  .agent-node .node-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+  .agent-node .node-title { font-weight: 600; font-size: 13px; }
+  .agent-node .node-desc { font-size: 11px; color: var(--text-secondary); }
+  .node-flow { display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; }
+  .flow-arrow { color: var(--text-secondary); font-size: 24px; }
+
+  /* Marketplace */
+  .marketplace-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .marketplace-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); cursor: pointer; transition: all .2s; }
+  .marketplace-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--primary); }
+  .marketplace-card .mc-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 12px; }
+  .marketplace-card .mc-name { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+  .marketplace-card .mc-author { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+  .marketplace-card .mc-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px; }
+  .marketplace-card .mc-footer { display: flex; align-items: center; justify-content: space-between; }
+  .stars { color: var(--warning); font-size: 12px; }
+  .installs { font-size: 11px; color: var(--text-secondary); }
+
+  /* Project list */
+  .project-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .project-row:last-child { border-bottom: none; }
+  .project-color { width: 4px; height: 36px; border-radius: 2px; flex-shrink: 0; }
+  .project-info { flex: 1; }
+  .project-name { font-weight: 600; font-size: 13px; }
+  .project-meta { font-size: 11px; color: var(--text-secondary); }
+  .project-amount { font-weight: 600; font-size: 14px; text-align: right; }
+
+  /* Animate in */
+  .fade-in { animation: fadeIn .4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .sidebar { width: 60px; padding: 16px 8px; }
+    .sidebar-logo span, .sidebar-logo .badge, .nav-section, .nav-item span, .user-info .name, .user-info .role { display: none; }
+    .nav-item { justify-content: center; padding: 12px; }
+    .main { margin-left: 60px; padding: 16px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-3-1, .marketplace-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 500px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Counter animation */
+  .count-up { display: inline-block; }
+
+  /* Approval modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+  .modal-overlay[hidden] { display: none !important; }
+  .modal { background: var(--card-bg); border-radius: 16px; padding: 32px; max-width: 480px; width: 90%; box-shadow: var(--shadow-lg); text-align: center; }
+  .modal h2 { font-size: 20px; margin-bottom: 8px; }
+  .modal p { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
+  .modal .btn + .btn { margin-left: 12px; }
+
+  .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2000; }
+
+  /* Search bar */
+  .search-bar { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; margin-bottom: 20px; }
+  .search-bar input { border: none; background: transparent; outline: none; flex: 1; font-size: 14px; color: var(--text); }
+  .search-bar svg { color: var(--text-secondary); width: 18px; height: 18px; }
+
+  /* Filter pills */
+  .filter-pills { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .pill { padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--border); background: var(--card-bg); cursor: pointer; transition: all .15s; }
+  .pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .pill:hover:not(.active) { border-color: var(--primary); }
+
+  /* Inline chart placeholder */
+  .mini-chart { display: flex; align-items: flex-end; gap: 3px; height: 40px; }
+  .mini-bar { width: 6px; border-radius: 2px; background: var(--primary); transition: height .5s ease; }
+
+/* Intuit Enterprise Suite inspired presentation layer. */
+:root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+ --bg:#f4f7f8; --sidebar-bg:#052846; --sidebar-text:#cadde8; --card-bg:#fff;
+ --primary:#0755bd; --primary-light:#e7f5fb; --text:#102c3c; --text-secondary:#526772;
+ --border:#dbe4e9; --purple:#315a85; --purple-light:#eaf1f8;
+ --success:#167345; --success-light:#e7f5ed; --warning:#936000; --warning-light:#fff5dd;
+ --danger:#bc3030; --danger-light:#ffeded; --radius:14px;
+ --shadow:0 2px 7px rgba(5,40,70,.025); --shadow-lg:0 12px 32px rgba(5,40,70,.1);
+ color-scheme:light;
+}
+body {font-family:'DM Sans',Arial,sans-serif; font-size:16px; line-height:1.5;}
+h1,h2,.card-title,.kpi-value,.page-header h1,.modal h2,.step-title,.mc-name,.node-title {font-family:'DM Sans',Arial,sans-serif;}
+.brand-header {height:72px;background:#fff;border-bottom:1px solid var(--border);position:fixed;inset:0 0 auto;z-index:150;display:flex;align-items:center;justify-content:space-between;padding:0 32px;gap:20px;}
+.brand-wordmark {font-size:21px;color:#111;letter-spacing:-.7px;white-space:nowrap;}
+.brand-wordmark strong {font-weight:800;}
+.brand-context {font-size:13px;color:#526772;letter-spacing:.3px;}
+.sidebar {top:72px;width:248px;padding:26px 16px 18px;overflow-y:auto;}
+.sidebar-logo {padding:0 12px 22px;margin-bottom:10px;}
+.sidebar-logo svg {display:none;}
+.sidebar-logo span {font-size:22px;font-weight:600;}
+.sidebar-logo .badge {font-size:12px;background:#c7f0f7;color:#052846;border-radius:4px;}
+.nav-section {font-size:12px;color:#a7c4d5;letter-spacing:1.4px;margin-top:24px;}
+.nav-item {min-height:46px;padding:12px;font-size:14px;border-radius:6px;margin-bottom:5px;}
+.nav-item.active {background:#c8eff7;color:#052846;box-shadow:inset 3px 0 #69c9dc;}
+.nav-item:hover {background:#164460;}
+.nav-item.active:hover {background:#b6e6f0;color:#052846;}
+.nav-item .dot {animation:none;}
+.sidebar-footer {padding:20px 10px 0;margin-top:auto;}
+.avatar,.chat-msg.ai .chat-avatar {background:#1168b4;}
+.user-info .name {font-size:14px;} .user-info .role {font-size:12px;}
+.main {margin-left:248px;margin-top:72px;padding:32px;max-width:none;min-width:0;}
+.page-header {background:#052846;color:white;padding:28px 30px;border-radius:16px;margin-bottom:26px;}
+.page-header h1 {font-size:32px;line-height:1.2;font-weight:500;letter-spacing:-.8px;margin-bottom:10px;}
+.page-header p {color:#d0e9f3;font-size:15px;max-width:660px;}
+.header-row {gap:24px;flex-wrap:wrap;}
+.page-header .btn-primary {background:#fff;color:#052846;}
+.page-header .btn-outline {color:#fff;border-color:#bfe1f0;}
+.card,.kpi-card,.marketplace-card {padding:24px;box-shadow:var(--shadow);}
+.card-header {gap:14px;flex-wrap:wrap;}
+.card-title {font-size:18px;letter-spacing:-.25px;}
+.kpi-grid {gap:18px;} .kpi-card {border-top:3px solid #bcebf5;}
+.kpi-label {font-size:12px;font-weight:600;letter-spacing:.7px;}
+.kpi-value {font-size:34px;font-weight:500;letter-spacing:-1px;}
+.kpi-change {font-size:12px;line-height:1.5;}
+.grid-2,.grid-3-1 {gap:22px;}
+.grid-3-1 {grid-template-columns:minmax(0,1.8fr) minmax(260px,1fr);}
+.grid-2 {grid-template-columns:repeat(2,minmax(0,1fr));}
+.btn {border-radius:5px;min-height:40px;font-family:inherit;justify-content:center;}
+.btn-sm {font-size:13px;padding:8px 14px;}
+.btn-primary:hover {background:#064798;color:white;}
+.btn-success {background:#167345;}
+.badge {font-size:12px;font-weight:500;}
+.activity-text,.step-desc,.step-detail,.mc-desc,.project-name,.data-table {font-size:14px;}
+.activity-item {padding:16px 0;}
+.activity-time,.project-meta,.mc-author,.installs,.node-desc {font-size:12px;}
+.step-title,.marketplace-card .mc-name {font-size:17px;}
+.marketplace-card .mc-desc {font-size:14px;}
+.marketplace-grid {grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;}
+.chat-bubble {font-size:15px;border-radius:12px;}
+.chat-input,.search-bar input {min-width:0;font-family:inherit;}
+.builder-canvas {background:#f1f8fc;border:1px solid #cadde8;}
+.agent-node {box-shadow:0 4px 16px #0528460b;}
+.pill {border-radius:5px;font-family:inherit;font-size:14px;}
+.modal {text-align:left;padding:32px;border-radius:16px;max-height:90vh;overflow:auto;}
+.modal h2 {font-size:25px;font-weight:500;}
+.data-table th {font-size:12px;}
+.data-table td {overflow-wrap:anywhere;}
+.card {overflow-x:auto;}
+button:focus-visible,input:focus-visible,select:focus-visible,.nav-item:focus-visible {outline:3px solid #53b9df;outline-offset:3px;}
+@media(max-width:1150px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.grid-3-1{grid-template-columns:1fr;}.marketplace-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:900px){.brand-header{padding:0 20px;}.sidebar{width:72px;padding:20px 8px;}.sidebar-logo{padding:0 0 20px;}.sidebar-logo svg{display:block;}.sidebar-logo span,.nav-section,.user-info>div:last-child{display:none;}.nav-item{padding:12px;justify-content:center;}.sidebar-footer{padding:16px 8px;}.main{margin-left:72px;padding:22px;}.grid-2{grid-template-columns:1fr;}.page-header{padding:24px;}.page-header h1{font-size:28px;}}
+@media(max-width:600px){.brand-header{height:64px;padding:0 14px;}.brand-wordmark{font-size:18px;}.brand-context{display:none;}.sidebar{top:64px;width:60px;padding:16px 6px;}.main{margin:64px 0 0 60px;padding:12px;}.page-header{padding:20px 16px;border-radius:10px;}.page-header h1{font-size:25px;}.header-row>div{max-width:100%;flex-wrap:wrap;}.kpi-grid,.marketplace-grid{grid-template-columns:1fr;}.card,.kpi-card,.marketplace-card{padding:18px;}.nav-item{padding:12px 8px;}.sidebar-footer{padding:12px 0;}.chat-msg{max-width:96%;}.chat-container{height:520px;}.node-flow{flex-direction:column;}.agent-node{max-width:100%;}.modal .btn{margin:6px 0!important;}.btn{white-space:normal;}.builder-canvas{padding:16px;}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;}}
+
+
+html{scroll-behavior:smooth} .step{scroll-margin-top:100px}
+.page.active{animation:pageArrival .4s cubic-bezier(.2,.7,.2,1) both}
+@keyframes pageArrival{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+.btn,.nav-item,.pill{transition:background .2s,box-shadow .2s,transform .2s}.btn:active{transform:scale(.97)}
+.modal-overlay{background:rgba(2,24,42,.48);backdrop-filter:blur(7px);transition:opacity .24s;animation:veilIn .25s both}
+.modal-overlay .modal{animation:dialogIn .38s cubic-bezier(.16,1,.3,1) both}
+.modal-overlay.closing{opacity:0}.modal-overlay.closing .modal{transform:translateY(12px) scale(.98);transition:transform .24s;animation:none}
+@keyframes veilIn{from{opacity:0}to{opacity:1}}@keyframes dialogIn{from{opacity:0;transform:translateY(22px) scale(.96)}to{opacity:1;transform:none}}
+.step-detail:not([hidden]){animation:pageArrival .45s both}.step.active .step-circle{box-shadow:0 0 0 7px #0755bd10;transition:all .5s}
+.step.active{opacity:1}.step{transition:opacity .5s}.progress-fill{transition:width 1.1s cubic-bezier(.22,1,.36,1)}
+.ai-status{display:flex;align-items:center;gap:14px;padding:16px 20px;margin:0 0 22px;border:1px solid #bcdde9;background:linear-gradient(110deg,#effaff,#fff);border-radius:12px;color:#163e53}
+.ai-orb{width:34px;height:34px;flex-shrink:0;display:grid;place-items:center;border-radius:50%;background:#052846;color:#b7edfa;font-size:21px}
+.ai-status.working .ai-orb{animation:aiBreathe 2s ease-in-out infinite}.ai-status strong{display:block;font-size:14px}.ai-status small{display:block;font-size:12px;color:#526772}.ai-status .ai-mode{margin-left:auto;border:1px solid #c5e0eb;border-radius:20px;padding:4px 10px;font-size:12px;white-space:nowrap}
+@keyframes aiBreathe{50%{box-shadow:0 0 0 7px #0755bd12;transform:scale(1.04)}}
+.chat-msg{animation:pageArrival .35s both}.typing-dot{background:#0755bd}.ai-thinking{font-size:13px;color:#526772;margin-bottom:6px}
+@media(max-width:600px){.ai-status{padding:12px;gap:10px}.ai-mode{display:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}}
+
+.ai-status{display:none!important}
+.nexus-spark{color:#9ce8ff!important;font-size:25px!important;animation:sparkTurn 9s ease-in-out infinite}
+@keyframes sparkTurn{0%,70%,100%{transform:rotate(0)}85%{transform:rotate(180deg)}}
+.page-header{position:relative;overflow:hidden}.page-header:after{content:'';position:absolute;bottom:0;left:-35%;width:35%;height:2px;background:linear-gradient(90deg,transparent,#67dcfa,transparent);animation:headerTrace 6s ease-in-out infinite;pointer-events:none}
+@keyframes headerTrace{0%,25%{left:-35%;opacity:0}35%{opacity:1}85%,100%{left:110%;opacity:0}}
+.kpi-card{position:relative;overflow:hidden;animation:resultRise .6s both}.kpi-card:nth-child(2){animation-delay:.12s}.kpi-card:nth-child(3){animation-delay:.24s}.kpi-card:nth-child(4){animation-delay:.36s}
+@keyframes resultRise{from{opacity:0;transform:translateY(14px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+.activity-icon{position:relative}.activity-icon:after{content:'';position:absolute;inset:-3px;border-radius:inherit;border:1px solid currentColor;opacity:0;animation:signalRing 5s ease-out infinite}.activity-item:nth-child(2) .activity-icon:after{animation-delay:1.1s}.activity-item:nth-child(3) .activity-icon:after{animation-delay:2.2s}
+@keyframes signalRing{0%,50%,100%{opacity:0;transform:scale(1)}60%{opacity:.3}85%{opacity:0;transform:scale(1.35)}}
+.step.active:not(.complete) .step-content{position:relative;overflow:hidden}.step.active:not(.complete) .step-content:after{content:'';position:absolute;inset:0;transform:translateX(-110%);background:linear-gradient(100deg,transparent 30%,#62cff51b 50%,transparent 70%);animation:scanSweep 2.5s ease-in-out infinite;pointer-events:none}
+@keyframes scanSweep{to{transform:translateX(110%)}}
+.step.active .step-circle{position:relative}.step.active .step-circle:after{content:'';position:absolute;inset:-6px;border:2px solid transparent;border-top-color:#51c6eb;border-right-color:#51c6eb;border-radius:50%;animation:orbit 1.8s linear infinite}
+@keyframes orbit{to{transform:rotate(360deg)}}
+.step.waiting .step-circle:after{animation:none;border-color:#e7ac46}.step.waiting .step-content:after{display:none}
+.node-flow{gap:12px;flex-wrap:nowrap}.agent-node{flex:1;min-width:0;width:auto;animation:nodeGlow 6s infinite}.agent-node:nth-of-type(3){animation-delay:1.2s}.agent-node:nth-of-type(5){animation-delay:2.4s}.agent-node:nth-of-type(7){animation-delay:3.6s}
+@keyframes nodeGlow{0%,65%,100%{border-color:var(--border);box-shadow:0 2px 7px #05284608}15%,35%{border-color:#58c5e5;box-shadow:0 0 0 4px #58c5e512}}
+.flow-arrow{position:relative;color:transparent;font-size:0;width:28px;flex:0 0 28px;height:2px;background:#cbdfe7}.flow-arrow:after{content:'';position:absolute;width:7px;height:7px;background:#2daddc;border-radius:50%;top:-2px;left:0;box-shadow:0 0 8px #55d5f7;animation:packet 2s infinite}
+@keyframes packet{0%{transform:translateX(0);opacity:0}20%{opacity:1}100%{transform:translateX(26px);opacity:0}}
+.chat-msg.ai .chat-avatar{background:conic-gradient(from 0deg,#062c4b,#1683bf,#69dce7,#062c4b);box-shadow:0 0 0 4px #53c6e810}.chat-msg.ai .chat-bubble{animation:resultRise .5s both}
+.thinking-visual{display:flex;align-items:center;gap:5px;height:32px;min-width:100px}.thinking-visual i{width:5px;height:9px;border-radius:5px;background:#1594c4;animation:thoughtWave 1s ease-in-out infinite}.thinking-visual i:nth-child(2){animation-delay:.12s}.thinking-visual i:nth-child(3){animation-delay:.24s}.thinking-visual i:nth-child(4){animation-delay:.36s}.thinking-visual i:nth-child(5){animation-delay:.48s}
+@keyframes thoughtWave{50%{height:27px;background:#6cdae9}}
+.modal{position:relative;overflow:hidden}.modal:before{content:'';position:absolute;left:0;top:0;width:100%;height:3px;background:linear-gradient(90deg,#06345b,#42c4eb,#a6ecdf,#06345b);background-size:200% 100%;animation:modalFlow 2s linear infinite}
+@keyframes modalFlow{to{background-position:200% 0}}
+@media(max-width:1000px){.node-flow{flex-direction:column}.agent-node{width:100%}.flow-arrow{transform:rotate(90deg);margin:12px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}.kpi-card{opacity:1}}
+
+:root{--primary:#0088b9;--primary-light:#e9f8fd;--bg:#fbfdfe;--border:#e4edf1;--shadow:0 1px 3px #12344a06}
+.brand-header{height:76px;padding:0 28px;position:fixed;gap:24px}.brand-wordmark{font-size:19px}.brand-context{display:none}
+.top-links{display:flex;gap:6px;margin-left:auto}.top-link{font:500 14px 'DM Sans',sans-serif;border:0;color:#526772;background:transparent;padding:11px 15px;border-radius:7px;cursor:pointer;transition:background .2s,color .2s}.top-link.active{background:#0088b9;color:white}.top-link:hover:not(.active){background:#e9f8fd;color:#075171}
+.sidebar{display:none}.main{margin-left:0;margin-top:76px;padding:32px;max-width:1440px;width:100%;margin-right:auto;margin-left:auto}
+.page-header{padding:4px 0 25px;background:transparent;border-radius:0;color:#102c3c;margin-bottom:4px;overflow:visible}.page-header h1{font-size:32px;font-weight:700;letter-spacing:-.6px}.page-header p{color:#657987;font-size:16px}.page-header:after{bottom:8px;height:1px}.page-header .btn-primary{background:#0088b9;color:white}.page-header .btn-outline{color:#0088b9;border-color:#0088b9}
+.card,.kpi-card,.marketplace-card{border-radius:9px;box-shadow:0 1px 3px #12344a06}.kpi-card{border-top:1px solid var(--border);text-align:center;padding:25px}.kpi-change{justify-content:center}.kpi-label{letter-spacing:0;text-transform:none;font-size:14px}.kpi-value{font-weight:650;font-size:30px}.kpi-grid{gap:18px}
+.card-header{background:linear-gradient(100deg,#e5f6fd,#edfcfa);margin:-24px -24px 22px;padding:20px 24px;border-bottom:1px solid #e4f0f3}.card-title{font-size:17px;font-weight:600}.card:has(>.card-header){overflow:hidden}.btn-primary{background:#0088b9}.btn-primary:hover{background:#0076a0}.badge{border-radius:5px}.marketplace-card{overflow:hidden}.marketplace-card .mc-icon{background:#e7f6fd!important;color:#0088b9;border-radius:7px}
+.run-sandbox{width:100%;margin:16px 0;background:#0088b9;color:white}.sandbox-feedback{padding:16px;border:1px solid #d3e9f1;border-radius:8px;background:#f0faff;margin-bottom:16px;font-size:14px}.sandbox-feedback[hidden]{display:none}.sandbox-feedback.running{background:linear-gradient(100deg,#effaff 30%,#d7f1fa 50%,#effaff 70%);background-size:250% 100%;animation:modalFlow 1.4s linear infinite}.sandbox-feedback strong{display:block;margin-bottom:4px}
+@media(max-width:1050px){.brand-header{height:112px;flex-wrap:wrap;gap:0;padding:12px 20px}.top-links{width:100%;margin:0;overflow-x:auto}.top-link{white-space:nowrap;padding:9px 12px}.main{margin-top:112px;padding:24px}.step{scroll-margin-top:135px}}
+@media(max-width:600px){.brand-header{padding:10px 12px}.main{margin:112px 0 0;padding:18px 12px}.page-header{padding:8px 0 22px}.page-header h1{font-size:26px}.card-header{margin:-18px -18px 18px;padding:16px 18px}.top-link{font-size:13px;padding:8px 10px}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi-card{padding:16px 10px}.kpi-value{font-size:25px}.kpi-change{font-size:11px}}
+
+body.login-open{display:block;background:radial-gradient(ellipse at 15% 10%,#ddf5fc,transparent 65%),#f6fbfd}
+body.login-open>.brand-header,body.login-open>.main{display:none}body.login-open>.sidebar{display:none}
+.login-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:26px}
+.login-screen[hidden]{display:none}.login-brand{text-align:center}.login-emblem{width:62px;height:62px;margin:0 auto 18px;border-radius:16px;background:#0088b9;color:white;display:grid;place-items:center;font-size:32px;box-shadow:0 8px 28px #0088b921}.login-brand h1{font-size:30px;color:#102c3c;letter-spacing:-.6px}.login-brand p{color:#657987;margin-top:5px;font-size:15px}
+.login-card{width:100%;max-width:440px;background:white;border:1px solid #e3edf1;border-radius:12px;padding:30px;box-shadow:0 5px 30px #12344a05;animation:dialogIn .45s both}.login-card h2{text-align:center;font-size:24px;font-weight:600;margin-bottom:6px}.login-intro{text-align:center;color:#657987;font-size:14px;margin-bottom:26px}.login-field{display:block;margin:0 0 18px;font-size:14px;font-weight:600}.login-field input{display:block;width:100%;height:44px;margin-top:8px;border:1px solid #dce7ec;border-radius:6px;padding:10px 12px;font:400 15px 'DM Sans',sans-serif;color:#102c3c;background:white}.login-field input:focus{outline:3px solid #0088b91a;border-color:#0088b9}.login-submit{width:100%;min-height:44px;margin:4px 0 22px;justify-content:center}.login-demo{background:#e7f7fd;padding:16px;border-radius:7px;font-size:13px;color:#526772;line-height:1.6}.login-demo strong{display:block;color:#075171;font-size:14px;margin-bottom:6px}.login-note{font-size:12px;color:#657987;text-align:center;max-width:420px}.login-spinner{width:16px;height:16px;border:2px solid #ffffff55;border-top-color:white;border-radius:50%;animation:orbit .75s linear infinite}.login-screen.departing{opacity:0;transform:translateY(-8px);transition:opacity .3s,transform .3s}.signout{border:1px solid #dce7ec;border-radius:6px;background:white;color:#526772;padding:9px 12px;cursor:pointer;white-space:nowrap;font:500 13px 'DM Sans',sans-serif}.login-error{color:#ac3030;font-size:13px;margin-bottom:12px}.login-error:empty{display:none}
+@media(max-width:1050px){.signout{position:absolute;right:18px;top:12px}}@media(max-width:600px){.login-card{padding:24px}.login-screen{padding:28px 18px}.login-brand h1{font-size:27px}}
+@media(prefers-reduced-motion:reduce){.login-screen.departing{transition:none}.login-spinner{animation:none}}
+/* The welcome heading receives focus after login without a visible outline. */ #page-dashboard h1[tabindex="-1"]:focus { outline: none; box-shadow: none; } 
+.tour-launch{position:fixed;bottom:20px;right:22px;z-index:180;border:1px solid #b8dce9;background:white;color:#075171;border-radius:24px;padding:11px 18px;box-shadow:0 4px 18px #05284618;cursor:pointer;font:600 14px 'DM Sans',sans-serif}.login-open .tour-launch{display:none}
+.tour-card{position:fixed;z-index:1200;background:#fff;border:1px solid #b9dce9;border-radius:14px;padding:22px;width:350px;max-width:calc(100vw - 24px);box-shadow:0 14px 55px #05284630;animation:dialogIn .3s both}.tour-card[hidden]{display:none}.tour-card h2{font-size:19px;margin:7px 0 9px}.tour-card p{font-size:14px;color:#526772;line-height:1.6;margin:0 0 18px}.tour-count{font-size:12px;color:#0088b9;font-weight:600}.tour-controls{display:flex;align-items:center;gap:8px}.tour-controls button{font:600 13px 'DM Sans',sans-serif;border-radius:6px;padding:9px 12px;cursor:pointer}.tour-skip{border:0;background:transparent;color:#657987;margin-right:auto}.tour-back{border:1px solid #dbe7ec;background:white;color:#075171}.tour-next{border:1px solid #0088b9;background:#0088b9;color:white}.tour-back:disabled{opacity:.4;cursor:default}.tour-highlight{outline:3px solid #36bce1!important;outline-offset:5px;box-shadow:0 0 0 9px #38bce114!important;scroll-margin-top:140px}.tour-card button:focus-visible,.tour-launch:focus-visible{outline:3px solid #53b9df;outline-offset:3px}
+@media(max-width:600px){.tour-launch{bottom:12px;right:12px}.tour-card{padding:18px}}
+</style></head><body class="login-open"><section class="login-screen" id="login-screen" aria-label="Sign in"><div class="login-brand"><div class="login-emblem" aria-hidden="true">✦</div><h1>IES Nexus</h1><p>Intuit Enterprise Suite · Platform access</p></div><form class="login-card" id="login-form"><h2>Sign in</h2><p class="login-intro">Access your business workspace and developer tools.</p><label class="login-field" for="login-email">Email<input type="email" id="login-email" placeholder="you@example.com" required autocomplete="off"></label><label class="login-field" for="login-password">Password<input type="password" id="login-password" placeholder="Enter your password" required autocomplete="off"></label><div class="login-demo" style="margin:0 0 18px;"><strong>Demo credentials</strong><div>Email: <span style="overflow-wrap:anywhere;user-select:all;">pgp26.muditb@spjimr.org</span></div><div>Password: <span style="user-select:all;">mudit123</span></div></div><p class="login-error" id="login-error" role="alert"></p><button class="btn btn-primary login-submit" type="submit">Sign in</button><div class="login-demo"><strong>Demo access</strong>Sign in with your assigned credentials to explore the prototype.</div></form><p class="login-note">Interactive case-study prototype.</p></section>
+
+<header class="brand-header"><div class="brand-wordmark"><strong>intuit</strong> enterprise suite</div><div class="brand-context">IES Nexus · Interactive prototype</div></header>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#0077c5"/><path d="M8 16h4v8H8zM14 12h4v12h-4zM20 8h4v16h-4z" fill="#fff"/></svg>
+    <span>IES Nexus</span>
+    <span class="nexus-spark" aria-hidden="true">✦</span>
+  </div>
+  <div class="nav-section">Platform</div>
+  <div class="nav-item active" onclick="showPage('dashboard')">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 6a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zm10 0a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+    <span>Command Center</span>
+  </div>
+  <div class="nav-item" onclick="showPage('close-agent')">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+    <span>Close Agent</span>
+    <span class="dot"></span>
+  </div>
+  <div class="nav-item" onclick="showPage('advisor')">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.84 8.84 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zm-4 0H9v2h2V9z" clip-rule="evenodd"/></svg>
+    <span>Advisor</span>
+  </div>
+  <div class="nav-section">Ecosystem</div>
+  <div class="nav-item" onclick="showPage('builder')">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+    <span>Agent Builder</span>
+  </div>
+  <div class="nav-item" onclick="showPage('marketplace')">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zm13 15.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
+    <span>Marketplace</span>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="avatar">PS</div>
+      <div>
+        <div class="name">Priya Sharma</div>
+        <div class="role">Controller · BuildCorp</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <!-- PAGE: DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div class="header-row">
+        <div>
+          <h1>Good morning, Priya</h1>
+          <p>Here's your financial command center for BuildCorp Industries</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <select style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);font-size:13px;color:var(--text);">
+            <option>All Entities (3)</option>
+            <option>BuildCorp TX</option>
+            <option>BuildCorp AZ</option>
+            <option>BuildCorp CO</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="showPage('close-agent')">▶ Start Month-End Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-grid fade-in">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Revenue (MTD)</div>
+        <div class="kpi-value">$4.2M</div>
+        <div class="kpi-change up">↑ 12% vs last month</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Cash Position</div>
+        <div class="kpi-value">$1.8M</div>
+        <div class="kpi-change down">↓ 3% — payroll due in 5 days</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Active Projects</div>
+        <div class="kpi-value">42</div>
+        <div class="kpi-change up">↑ 3 new this month</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Close Progress</div>
+        <div class="kpi-value" style="color:var(--warning);">Day 2</div>
+        <div class="kpi-change" style="color:var(--text-secondary);">Target: 3 days (was 21 days)</div>
+      </div>
+    </div>
+
+    <div class="grid-3-1 fade-in">
+      <div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🤖 Agent Activity</div>
+            <span class="badge badge-green">3 Agents Active</span>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon blue">⚡</div>
+            <div>
+              <div class="activity-text"><strong>Close Agent</strong> reconciled 847 transactions across 3 entities. <span class="badge badge-orange" style="margin-left:4px;">1 anomaly flagged</span></div>
+              <div class="activity-time">2 minutes ago</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon green">📊</div>
+            <div>
+              <div class="activity-text"><strong>Forecast Agent</strong> updated 90-day cash flow projection. Flagged potential shortfall in Week 6 if Riverside project payment delays.</div>
+              <div class="activity-time">15 minutes ago</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon purple">🔍</div>
+            <div>
+              <div class="activity-text"><strong>Compliance Agent</strong> completed multi-state tax jurisdiction review for Q3. All 3 entities compliant.</div>
+              <div class="activity-time">1 hour ago</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon orange">👤</div>
+            <div>
+              <div class="activity-text"><strong>Expert Connect</strong> — Your scheduled advisory session with CPA advisor Sarah Mitchell is tomorrow at 2pm (retention billing strategy).</div>
+              <div class="activity-time">Scheduled</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Project Profitability Overview</div>
+            <button class="btn btn-outline btn-sm">View All →</button>
+          </div>
+          <div class="project-row">
+            <div class="project-color" style="background:var(--success)"></div>
+            <div class="project-info"><div class="project-name">Riverside Commercial Complex</div><div class="project-meta">Austin, TX · 68% complete</div></div>
+            <div><div class="project-amount" style="color:var(--success)">$1.2M</div><div style="font-size:11px;color:var(--text-secondary);text-align:right">18% margin</div></div>
+          </div>
+          <div class="project-row">
+            <div class="project-color" style="background:var(--primary)"></div>
+            <div class="project-info"><div class="project-name">Mesa Heights Residential</div><div class="project-meta">Phoenix, AZ · 42% complete</div></div>
+            <div><div class="project-amount">$890K</div><div style="font-size:11px;color:var(--text-secondary);text-align:right">15% margin</div></div>
+          </div>
+          <div class="project-row">
+            <div class="project-color" style="background:var(--warning)"></div>
+            <div class="project-info"><div class="project-name">Downtown Office Renovation</div><div class="project-meta">Denver, CO · 91% complete</div></div>
+            <div><div class="project-amount" style="color:var(--warning)">$340K</div><div style="font-size:11px;color:var(--text-secondary);text-align:right">8% margin ⚠️</div></div>
+          </div>
+          <div class="project-row">
+            <div class="project-color" style="background:var(--danger)"></div>
+            <div class="project-info"><div class="project-name">I-35 Bridge Subcontract</div><div class="project-meta">Austin, TX · 23% complete</div></div>
+            <div><div class="project-amount" style="color:var(--danger)">$2.1M</div><div style="font-size:11px;color:var(--text-secondary);text-align:right">-2% margin 🔴</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Cash Flow Forecast</div>
+          </div>
+          <div style="text-align:center;padding:8px 0 16px;">
+            <div class="mini-chart" style="justify-content:center;">
+              <div class="mini-bar" style="height:20px;background:var(--success)"></div>
+              <div class="mini-bar" style="height:28px;background:var(--success)"></div>
+              <div class="mini-bar" style="height:35px;background:var(--success)"></div>
+              <div class="mini-bar" style="height:25px;background:var(--success)"></div>
+              <div class="mini-bar" style="height:18px;background:var(--warning)"></div>
+              <div class="mini-bar" style="height:12px;background:var(--danger)"></div>
+              <div class="mini-bar" style="height:22px;background:var(--success)"></div>
+              <div class="mini-bar" style="height:30px;background:var(--success)"></div>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:8px;">Next 8 weeks — Week 6 flagged</div>
+          </div>
+          <div style="padding:12px;background:var(--warning-light);border-radius:8px;font-size:12px;line-height:1.5;">
+            ⚠️ <strong>Insight:</strong> If Riverside payment delays beyond Day 45, cash drops below $200K in Week 6. Recommend drawing $400K credit line or accelerating Mesa Heights billing.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Retention Exposure</div>
+          </div>
+          <div style="font-size:28px;font-weight:700;margin-bottom:4px;">$847K</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">Across 12 active contracts</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:62%;background:var(--warning)"></div></div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:6px;">62% within 30-day release window</div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Subcontractor Status</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;"><span>On Track</span><strong style="color:var(--success)">28</strong></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;"><span>Over Budget</span><strong style="color:var(--warning)">6</strong></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;"><span>Payment Overdue</span><strong style="color:var(--danger)">3</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: CLOSE AGENT -->
+  <div class="page" id="page-close-agent">
+    <div class="page-header">
+      <div class="header-row">
+        <div>
+          <h1>🤖 Autonomous Close Agent</h1>
+          <p>August 2026 Month-End Close · 3 Entities · BuildCorp Industries</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="badge badge-blue" id="close-status-badge">Ready to Start</span>
+          <button class="btn btn-primary" id="start-close-btn" onclick="startCloseWorkflow()">▶ Start Autonomous Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3-1 fade-in">
+      <div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Close Workflow</div>
+            <div style="font-size:12px;color:var(--text-secondary);" id="close-timer"></div>
+          </div>
+          <div class="workflow-steps" id="workflow-steps">
+            <div class="step" id="step-1">
+              <div class="step-indicator"><div class="step-circle">1</div><div class="step-line"></div></div>
+              <div class="step-content">
+                <div class="step-title">Scan & Ingest</div>
+                <div class="step-desc">Agent connects to all 3 entities and ingests transaction data</div>
+                <div class="step-detail" id="step-1-detail" hidden>
+                  <div style="margin-bottom:8px;">✅ <strong>BuildCorp TX:</strong> 412 transactions ingested</div>
+                  <div style="margin-bottom:8px;">✅ <strong>BuildCorp AZ:</strong> 289 transactions ingested</div>
+                  <div>✅ <strong>BuildCorp CO:</strong> 146 transactions ingested</div>
+                  <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-weight:600;">Total: 847 transactions across 3 entities</div>
+                </div>
+              </div>
+            </div>
+            <div class="step" id="step-2">
+              <div class="step-indicator"><div class="step-circle">2</div><div class="step-line"></div></div>
+              <div class="step-content">
+                <div class="step-title">Auto-Reconciliation</div>
+                <div class="step-desc">Match bank statements, vendor invoices, and GL entries</div>
+                <div class="step-detail" id="step-2-detail" hidden>
+                  <div style="margin-bottom:8px;">✅ Bank reconciliation: <strong>98.7% auto-matched</strong> (836/847)</div>
+                  <div style="margin-bottom:8px;">✅ Vendor invoice matching: 124 of 127 matched</div>
+                  <div>⚠️ 11 transactions require review — see anomaly detection</div>
+                </div>
+              </div>
+            </div>
+            <div class="step" id="step-3">
+              <div class="step-indicator"><div class="step-circle">3</div><div class="step-line"></div></div>
+              <div class="step-content">
+                <div class="step-title">Anomaly Detection</div>
+                <div class="step-desc">Detects discrepancies, unusual patterns, and compliance flags</div>
+                <div class="step-detail anomaly" id="step-3-detail" hidden>
+                  <div style="font-weight:600;color:var(--warning);margin-bottom:8px;">⚠️ 1 Critical Anomaly Found</div>
+                  <div style="margin-bottom:8px;"><strong>Entity:</strong> BuildCorp AZ (Mesa Heights project)</div>
+                  <div style="margin-bottom:8px;"><strong>Issue:</strong> $23,400 subcontractor payment recorded in August but PO dated September 3. This creates a cut-off error that would overstate August COGS by $23,400.</div>
+                  <div style="margin-bottom:12px;"><strong>Recommendation:</strong> Reverse the entry to September. Adjusted journal entry drafted below.</div>
+                  <div style="background:var(--card-bg);padding:12px;border-radius:6px;font-family:monospace;font-size:12px;">
+                    DR  Prepaid Expenses (1350)  $23,400<br>
+                    CR  Accounts Payable (2100)  $23,400<br>
+                    <span style="color:var(--text-secondary);">Memo: Reclassify to Sept — PO #AZ-2847</span>
+                  </div>
+                  <div style="margin-top:12px;display:flex;gap:8px;">
+                    <button class="btn btn-success btn-sm" onclick="approveAnomaly()">✓ Accept & Apply</button>
+                    <button class="btn btn-outline btn-sm">✎ Modify Entry</button>
+                    <button class="btn btn-outline btn-sm">💬 Ask Expert</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="step" id="step-4">
+              <div class="step-indicator"><div class="step-circle">4</div><div class="step-line"></div></div>
+              <div class="step-content">
+                <div class="step-title">Intercompany Eliminations</div>
+                <div class="step-desc">Auto-generate elimination entries for consolidated reporting</div>
+                <div class="step-detail success" id="step-4-detail" hidden>
+                  <div style="font-weight:600;color:var(--success);margin-bottom:8px;">✅ 12 Elimination Entries Generated</div>
+                  <table class="data-table" style="margin-top:8px;">
+                    <tr><th>From</th><th>To</th><th>Type</th><th>Amount</th></tr>
+                    <tr><td>TX</td><td>AZ</td><td>Equipment Transfer</td><td>$45,200</td></tr>
+                    <tr><td>TX</td><td>CO</td><td>Mgmt Fee</td><td>$18,500</td></tr>
+                    <tr><td>AZ</td><td>TX</td><td>Labor Recharge</td><td>$67,300</td></tr>
+                    <tr><td colspan="3" style="color:var(--text-secondary)">+ 9 more entries...</td><td style="font-weight:600">$312,800</td></tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="step" id="step-5">
+              <div class="step-indicator"><div class="step-circle">5</div><div class="step-line"></div></div>
+              <div class="step-content">
+                <div class="step-title">Revenue Recognition & Job Costing</div>
+                <div class="step-desc">Calculate % completion, recognize revenue, update WIP schedules</div>
+                <div class="step-detail success" id="step-5-detail" hidden>
+                  <div style="margin-bottom:8px;">✅ 42 projects updated with % completion method</div>
+                  <div style="margin-bottom:8px;">✅ Revenue recognized: <strong>$4,218,340</strong></div>
+                  <div style="margin-bottom:8px;">✅ WIP schedule balanced across all entities</div>
+                  <div>✅ Retention billing schedule updated — $127K billable this cycle</div>
+                </div>
+              </div>
+            </div>
+            <div class="step" id="step-6">
+              <div class="step-indicator"><div class="step-circle">6</div><div class="step-line"></div></div>
+              <div class="step-content">
+                <div class="step-title">Close Package & Approval</div>
+                <div class="step-desc">Generate consolidated financial statements for your review</div>
+                <div class="step-detail success" id="step-6-detail" hidden>
+                  <div style="font-weight:600;color:var(--success);margin-bottom:12px;">📋 Close Package Ready for Review</div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+                    <div style="padding:12px;background:var(--bg);border-radius:8px;">
+                      <div style="font-size:11px;color:var(--text-secondary)">Consolidated Revenue</div>
+                      <div style="font-size:18px;font-weight:700">$4,218,340</div>
+                    </div>
+                    <div style="padding:12px;background:var(--bg);border-radius:8px;">
+                      <div style="font-size:11px;color:var(--text-secondary)">Net Income</div>
+                      <div style="font-size:18px;font-weight:700;color:var(--success)">$486,220</div>
+                    </div>
+                    <div style="padding:12px;background:var(--bg);border-radius:8px;">
+                      <div style="font-size:11px;color:var(--text-secondary)">Gross Margin</div>
+                      <div style="font-size:18px;font-weight:700">14.2%</div>
+                    </div>
+                    <div style="padding:12px;background:var(--bg);border-radius:8px;">
+                      <div style="font-size:11px;color:var(--text-secondary)">Time to Close</div>
+                      <div style="font-size:18px;font-weight:700;color:var(--primary)">2.5 days</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:8px;">
+                    <button class="btn btn-success btn-lg" onclick="approveClose()" style="flex:1;">✅ Approve & Finalize Close</button>
+                  </div>
+                  <div style="display:flex;gap:8px;margin-top:8px;">
+                    <button class="btn btn-outline btn-sm" style="flex:1;">📄 Download Full Package</button>
+                    <button class="btn btn-outline btn-sm" style="flex:1;">💬 Discuss with Expert</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Close Summary</div></div>
+          <div style="margin-bottom:16px;">
+            <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Overall Progress</div>
+            <div class="progress-bar"><div class="progress-fill" id="close-progress" style="width:0%;background:var(--primary)"></div></div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;" id="close-pct">0% complete</div>
+          </div>
+          <div style="font-size:13px;">
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span>Transactions</span><strong id="txn-count">—</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span>Auto-Matched</span><strong id="match-count">—</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span>Anomalies</span><strong id="anomaly-count">—</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span>Eliminations</span><strong id="elim-count">—</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;"><span>Human Reviews</span><strong id="review-count">—</strong></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Before vs After</div></div>
+          <div style="display:flex;gap:12px;">
+            <div style="flex:1;text-align:center;padding:16px;background:var(--danger-light);border-radius:8px;">
+              <div style="font-size:11px;color:var(--text-secondary);">Before Nexus</div>
+              <div style="font-size:24px;font-weight:700;color:var(--danger);">21 days</div>
+              <div style="font-size:11px;color:var(--text-secondary);">Manual close</div>
+            </div>
+            <div style="flex:1;text-align:center;padding:16px;background:var(--success-light);border-radius:8px;">
+              <div style="font-size:11px;color:var(--text-secondary);">With Nexus</div>
+              <div style="font-size:24px;font-weight:700;color:var(--success);">2.5 days</div>
+              <div style="font-size:11px;color:var(--text-secondary);">Automated</div>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:12px;font-size:13px;font-weight:600;color:var(--success);">88% faster close cycle</div>
+        </div>
+        <div class="card" style="background:linear-gradient(135deg,var(--primary),var(--purple));color:#fff;border:none;">
+          <div style="font-size:13px;opacity:.8;margin-bottom:4px;">Review & approval model</div>
+          <div style="font-size:14px;line-height:1.6;">
+            <div style="margin-bottom:8px;">🤖 <strong>Autonomous:</strong> Bank recon, transaction matching, routine JEs</div>
+            <div style="margin-bottom:8px;">🤝 <strong>Assisted:</strong> Anomaly resolution, eliminations, revenue recognition</div>
+            <div>👤 <strong>Human Required:</strong> Final approval, tax strategy, audit prep</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: AI ADVISOR -->
+  <div class="page" id="page-advisor">
+    <div class="page-header">
+      <h1>💬 Advisor</h1>
+      <p>Ask anything about your financials — powered by IES Nexus intelligence with expert escalation</p>
+    </div>
+    <div class="grid-3-1 fade-in">
+      <div class="card">
+        <div class="chat-container">
+          <div class="chat-messages" id="chat-messages">
+            <div class="chat-msg ai">
+              <div class="chat-avatar">N</div>
+              <div class="chat-bubble">Hi Priya! I'm your IES Nexus Advisor. I have full context on BuildCorp's financials across all 3 entities, 42 active projects, and your workforce data. What would you like to know?</div>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="chat-input" placeholder="Ask about your financials..." onkeydown="if(event.key==='Enter')sendChat()">
+            <button class="chat-send" onclick="sendChat()">➤</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px;">Quick Queries</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;" onclick="quickChat('Show me retention billing exposure across all Texas projects')">📊 Retention exposure in TX</button>
+            <button class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;" onclick="quickChat('Which subcontractors are over budget this month?')">⚠️ Over-budget subcontractors</button>
+            <button class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;" onclick="quickChat('Compare gross margin across all 3 entities for Q3')">📈 Q3 margin by entity</button>
+            <button class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;" onclick="quickChat('What are our compliance obligations for the Colorado entity this quarter?')">📋 CO compliance check</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px;">Expert Connect</div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:8px;margin-bottom:8px;">
+            <div class="avatar" style="background:linear-gradient(135deg,var(--success),#059669);">SM</div>
+            <div>
+              <div style="font-weight:600;font-size:13px;">Sarah Mitchell, CPA</div>
+              <div style="font-size:11px;color:var(--text-secondary);">Construction accounting specialist</div>
+              <div style="font-size:11px;color:var(--success);">● Available now</div>
+            </div>
+          </div>
+          <div style="display:grid;gap:10px;">
+<button class="expert-tour-target btn btn-outline btn-sm" style="width:100%;justify-content:center;" onclick="showExpertContact('call')">☎ Request a call</button>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+<button class="btn btn-outline btn-sm" onclick="showExpertContact('email')">✉ Email</button>
+<button class="btn btn-outline btn-sm" onclick="showExpertContact('linkedin')"><span aria-hidden="true" style="font-weight:800;">in</span> LinkedIn</button>
+</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: AGENT BUILDER -->
+  <div class="page" id="page-builder">
+    <div class="page-header">
+      <div class="header-row">
+        <div>
+          <h1>🛠️ Agent Builder</h1>
+          <p>Build, test, and deploy custom agents on the IES Nexus platform</p>
+        </div>
+        <span class="badge badge-purple">Developer Portal</span>
+      </div>
+    </div>
+    <div class="fade-in">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <div class="card-title">Create New Agent: Safety Compliance Monitor</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm">📖 API Docs</button>
+            <button class="btn btn-primary btn-sm" onclick="deployAgent()">🚀 Deploy Agent</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div style="padding:16px;background:var(--bg);border-radius:8px;">
+            <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">Agent Type</div>
+            <div style="font-weight:600;font-size:14px;">Monitoring & Alerting</div>
+          </div>
+          <div style="padding:16px;background:var(--bg);border-radius:8px;">
+            <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">Data Sources</div>
+            <div style="font-weight:600;font-size:14px;">Workforce + Projects</div>
+          </div>
+          <div style="padding:16px;background:var(--bg);border-radius:8px;">
+            <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">Trigger</div>
+            <div style="font-weight:600;font-size:14px;">Real-time + Daily Scan</div>
+          </div>
+        </div>
+        <div class="card-title" style="margin-bottom:12px;font-size:13px;">Agent Workflow Pipeline</div>
+        <div class="node-flow">
+          <div class="agent-node">
+            <div class="node-icon" style="background:var(--primary-light);color:var(--primary);">📥</div>
+            <div class="node-title">Data Ingestion</div>
+            <div class="node-desc">IES Workforce API + Project API</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="agent-node">
+            <div class="node-icon" style="background:var(--purple-light);color:var(--purple);">🧠</div>
+            <div class="node-title">Analysis</div>
+            <div class="node-desc">OSHA compliance rules engine + LLM reasoning</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="agent-node">
+            <div class="node-icon" style="background:var(--warning-light);color:var(--warning);">⚡</div>
+            <div class="node-title">Alert & Action</div>
+            <div class="node-desc">Notify PM, auto-file reports, block non-compliant timesheets</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="agent-node">
+            <div class="node-icon" style="background:var(--success-light);color:var(--success);">📊</div>
+            <div class="node-title">Dashboard</div>
+            <div class="node-desc">Safety score by site, trend analysis, audit trail</div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px;">Agent Code (Python SDK)</div>
+          <div style="background:#1e1e2e;color:#cdd6f4;padding:16px;border-radius:8px;font-family:'JetBrains Mono','SF Mono',Monaco,monospace;font-size:12px;line-height:1.8;overflow-x:auto;">
+<span style="color:#89b4fa">from</span> <span style="color:#f9e2af">intuit_ies</span> <span style="color:#89b4fa">import</span> Agent, WorkforceAPI, ProjectAPI<br>
+<span style="color:#89b4fa">from</span> <span style="color:#f9e2af">intuit_ies.ai</span> <span style="color:#89b4fa">import</span> ComplianceEngine<br><br>
+<span style="color:#89b4fa">class</span> <span style="color:#a6e3a1">SafetyComplianceAgent</span>(Agent):<br>
+&nbsp;&nbsp;<span style="color:#89b4fa">def</span> <span style="color:#89dceb">__init__</span>(self):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;self.workforce = WorkforceAPI()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;self.projects = ProjectAPI()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;self.engine = ComplianceEngine(<span style="color:#f38ba8">"OSHA"</span>)<br><br>
+&nbsp;&nbsp;<span style="color:#89b4fa">async def</span> <span style="color:#89dceb">monitor</span>(self):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;sites = <span style="color:#89b4fa">await</span> self.projects.active_sites()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#89b4fa">for</span> site <span style="color:#89b4fa">in</span> sites:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;crew = <span style="color:#89b4fa">await</span> self.workforce.get_crew(site.id)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;violations = self.engine.check(crew, site)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#89b4fa">if</span> violations:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#89b4fa">await</span> self.alert(site.pm, violations)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#89b4fa">await</span> self.auto_file(violations)
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px;">API Sandbox — Test Run</div>
+          <div style="padding:16px;background:var(--bg);border-radius:8px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+              <span class="badge badge-green">200 OK</span>
+              <span style="font-size:12px;color:var(--text-secondary);">Response time: 142ms</span>
+            </div>
+            <div style="background:#1e1e2e;color:#cdd6f4;padding:12px;border-radius:6px;font-family:monospace;font-size:11px;line-height:1.6;">
+{<br>
+&nbsp;&nbsp;<span style="color:#f38ba8">"agent_id"</span>: <span style="color:#a6e3a1">"agt_safety_001"</span>,<br>
+&nbsp;&nbsp;<span style="color:#f38ba8">"sites_scanned"</span>: <span style="color:#fab387">42</span>,<br>
+&nbsp;&nbsp;<span style="color:#f38ba8">"violations_found"</span>: <span style="color:#fab387">3</span>,<br>
+&nbsp;&nbsp;<span style="color:#f38ba8">"auto_actions"</span>: [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#a6e3a1">"Blocked 2 uncertified timesheets"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#a6e3a1">"Filed OSHA Form 300 for Site #12"</span><br>
+&nbsp;&nbsp;],<br>
+&nbsp;&nbsp;<span style="color:#f38ba8">"next_scan"</span>: <span style="color:#a6e3a1">"2026-09-01T06:00:00Z"</span><br>
+}
+            </div>
+          </div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Monetization Options</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="radio" name="pricing" checked> Per-seat subscription ($15/site/mo)</label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="radio" name="pricing"> Usage-based ($0.02/API call)</label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="radio" name="pricing"> Freemium (basic free, premium alerts $)</label>
+          </div>
+          <div style="margin-top:12px;padding:12px;background:var(--primary-light);border-radius:8px;font-size:12px;">
+            💡 <strong>Platform fee:</strong> 12% rev-share on Marketplace transactions. First 12 months free for early builders.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: MARKETPLACE -->
+  <div class="page" id="page-marketplace">
+    <div class="page-header">
+      <h1>🏪 Agent Marketplace</h1>
+      <p>Discover agents built by developers and ISVs for mid-market businesses</p>
+    </div>
+    <div class="search-bar fade-in">
+      <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>
+      <input placeholder="Search agents, integrations, and tools...">
+    </div>
+    <div class="filter-pills fade-in">
+      <span class="pill active">All</span>
+      <span class="pill">Finance & Close</span>
+      <span class="pill">Construction</span>
+      <span class="pill">Compliance</span>
+      <span class="pill">Workforce</span>
+      <span class="pill">Analytics</span>
+      <span class="pill">Commerce</span>
+    </div>
+    <div class="marketplace-grid fade-in">
+      <div class="marketplace-card">
+        <div class="mc-icon" style="background:var(--success-light);">🏗️</div>
+        <div class="mc-name">Construction Cost Predictor</div>
+        <div class="mc-author">by BuiltRight Analytics</div>
+        <div class="mc-desc">Agent that predicts cost overruns 30 days before they happen using historical project data and material price feeds.</div>
+        <div class="mc-footer">
+          <div><span class="stars">★★★★★</span> <span class="installs">4.8 · 1,240 installs</span></div>
+          <span class="badge badge-green">IES Verified</span>
+        </div>
+      </div>
+      <div class="marketplace-card">
+        <div class="mc-icon" style="background:var(--primary-light);">📋</div>
+        <div class="mc-name">Lien Waiver Automator</div>
+        <div class="mc-author">by ComplianceFirst</div>
+        <div class="mc-desc">Automatically generates, tracks, and collects lien waivers from subcontractors tied to IES payment workflows.</div>
+        <div class="mc-footer">
+          <div><span class="stars">★★★★☆</span> <span class="installs">4.5 · 890 installs</span></div>
+          <span class="badge badge-green">IES Verified</span>
+        </div>
+      </div>
+      <div class="marketplace-card">
+        <div class="mc-icon" style="background:var(--purple-light);">🤖</div>
+        <div class="mc-name">Multi-State Tax Agent</div>
+        <div class="mc-author">by TaxFlow</div>
+        <div class="mc-desc">Agent that monitors nexus rules, auto-files state registrations, and calculates apportioned tax obligations across entities.</div>
+        <div class="mc-footer">
+          <div><span class="stars">★★★★★</span> <span class="installs">4.9 · 2,100 installs</span></div>
+          <span class="badge badge-blue">Premium</span>
+        </div>
+      </div>
+      <div class="marketplace-card">
+        <div class="mc-icon" style="background:var(--warning-light);">⚡</div>
+        <div class="mc-name">Safety Compliance Monitor</div>
+        <div class="mc-author">by SafeSite.io</div>
+        <div class="mc-desc">Real-time OSHA compliance monitoring across job sites. Auto-blocks non-compliant timesheets and files incident reports.</div>
+        <div class="mc-footer">
+          <div><span class="stars">★★★★☆</span> <span class="installs">4.6 · 670 installs</span></div>
+          <span class="badge badge-green">IES Verified</span>
+        </div>
+      </div>
+      <div class="marketplace-card">
+        <div class="mc-icon" style="background:var(--danger-light);">📊</div>
+        <div class="mc-name">Cash Flow Prophet</div>
+        <div class="mc-author">by Finance Labs</div>
+        <div class="mc-desc">90-day rolling cash flow forecast with scenario modeling. Integrates receivables, payables, and project milestone data.</div>
+        <div class="mc-footer">
+          <div><span class="stars">★★★★★</span> <span class="installs">4.7 · 1,580 installs</span></div>
+          <span class="badge badge-green">IES Verified</span>
+        </div>
+      </div>
+      <div class="marketplace-card">
+        <div class="mc-icon" style="background:var(--success-light);">👷</div>
+        <div class="mc-name">Subcontractor Intelligence</div>
+        <div class="mc-author">by CrewMetrics</div>
+        <div class="mc-desc">Automated subcontractor scoring, performance tracking, and payment optimization. Reduces payment disputes by 60%.</div>
+        <div class="mc-footer">
+          <div><span class="stars">★★★★☆</span> <span class="installs">4.4 · 450 installs</span></div>
+          <span class="badge badge-orange">New</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Approval Modal -->
+<div class="modal-overlay" id="approval-modal" hidden>
+  <div class="modal">
+    <div style="font-size:48px;margin-bottom:16px;">✅</div>
+    <h2>Month-End Close Approved!</h2>
+    <p>August 2026 consolidated financials have been finalized across all 3 entities. Close completed in <strong>2.5 days</strong> — an 88% improvement from your previous 21-day cycle.</p>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button class="btn btn-primary" onclick="closeAIModal('approval-modal');">View Final Report</button>
+      <button class="btn btn-outline" onclick="closeAIModal('approval-modal');">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Deploy Agent Modal -->
+<div class="modal-overlay" id="deploy-modal" hidden>
+  <div class="modal">
+    <div style="font-size:48px;margin-bottom:16px;">🚀</div>
+    <h2>Agent Deployed to Marketplace!</h2>
+    <p>Safety Compliance Monitor is now live on the IES Nexus Marketplace. It will appear under "Construction" and "Compliance" categories.</p>
+    <div style="padding:16px;background:var(--bg);border-radius:8px;text-align:left;font-size:13px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Status</span><span class="badge badge-green">Live</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Pricing</span><strong>$15/site/mo</strong></div>
+      <div style="display:flex;justify-content:space-between;"><span>Platform Fee</span><strong>12% (waived yr 1)</strong></div>
+    </div>
+    <button class="btn btn-primary" onclick="closeAIModal('deploy-modal');">Got it!</button>
+  </div>
+</div>
+
+<script>
+  // Navigation
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    window.scrollTo({top:0,behavior:"instant"});
+    // Also update nav visually
+    const navItems = document.querySelectorAll('.nav-item');
+    const pageMap = { dashboard: 0, 'close-agent': 1, advisor: 2, builder: 3, marketplace: 4 };
+    navItems.forEach((n, i) => n.classList.toggle('active', i === pageMap[id]));
+  }
+
+  // Close Agent Workflow
+  let closeStep = 0;
+  let closeInterval;
+
+  function startCloseWorkflow() {
+    const btn = document.getElementById('start-close-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Running...';
+    btn.style.opacity = '.6';
+    document.getElementById('close-status-badge').textContent = 'In Progress';
+    document.getElementById('close-status-badge').className = 'badge badge-orange';
+    closeStep = 0;
+    advanceStep();
+  }
+
+  function advanceStep() {
+    closeStep++;
+    if (closeStep > 6) return;
+
+    const step = document.getElementById('step-' + closeStep);
+    const detail = document.getElementById('step-' + closeStep + '-detail');
+
+    // Mark previous steps complete
+    for (let i = 1; i < closeStep; i++) {
+      document.getElementById('step-' + i).classList.remove('active');
+      document.getElementById('step-' + i).classList.add('complete');
+      document.getElementById('step-' + i).querySelector('.step-circle').textContent = '✓';
+    }
+
+    step.classList.add('active');
+    if(document.getElementById('page-close-agent').classList.contains('active')) step.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth', block: 'nearest' });
+    setAIStatus('close-agent', ['Connecting entity records','Matching transactions','Checking exceptions','Preparing eliminations','Calculating revenue and job costs','Preparing your close package'][closeStep-1], 'AI working · Step '+closeStep+' of 6', true);
+
+    // Update progress
+    const pct = Math.round((closeStep / 6) * 100);
+    document.getElementById('close-progress').style.width = pct + '%';
+    document.getElementById('close-pct').textContent = pct + '% complete';
+
+    // Update summary
+    const summaryUpdates = {
+      1: { 'txn-count': '847', 'match-count': '—', 'anomaly-count': '—', 'elim-count': '—', 'review-count': '—' },
+      2: { 'match-count': '836 (98.7%)' },
+      3: { 'anomaly-count': '1 flagged' },
+      4: { 'elim-count': '12 entries' },
+      5: { 'review-count': '1 pending' },
+      6: {}
+    };
+    const updates = summaryUpdates[closeStep];
+    for (const [k, v] of Object.entries(updates)) {
+      const el = document.getElementById(k);
+      if (el) el.textContent = v;
+    }
+
+    // Show detail after a delay
+    setTimeout(() => {
+      if (detail) detail.hidden = false;
+      if(closeStep===3 || closeStep===6) step.classList.add('waiting');
+      if(closeStep===3) setAIStatus('close-agent','Anomaly found · your review is needed','Review the evidence below before applying a change',false);
+      if(closeStep===6) setAIStatus('close-agent','Close package ready for review','You remain in control of final approval',false);
+      // Auto-advance (except step 3 which needs user action, and step 6 which is final)
+      if (closeStep !== 3 && closeStep !== 6) {
+        setTimeout(advanceStep, 2000);
+      }
+      if (closeStep === 6) {
+        document.getElementById('close-status-badge').textContent = 'Awaiting Approval';
+        document.getElementById('close-status-badge').className = 'badge badge-green';
+      }
+    }, 1500);
+  }
+
+  function approveAnomaly() {
+    document.getElementById('step-3').classList.remove('waiting');
+    event.target.textContent = '✓ Applied';
+    event.target.disabled = true;
+    event.target.style.opacity = '.6';
+    document.getElementById('anomaly-count').textContent = '1 resolved ✓';
+    setTimeout(advanceStep, 1000);
+  }
+
+  function approveClose() {
+    document.getElementById('step-6').classList.remove('waiting');
+    // Mark step 6 complete
+    for (let i = 1; i <= 6; i++) {
+      const s = document.getElementById('step-' + i);
+      s.classList.remove('active');
+      s.classList.add('complete');
+      s.querySelector('.step-circle').textContent = '✓';
+    }
+    document.getElementById('close-progress').style.width = '100%';
+    document.getElementById('close-pct').textContent = '100% — Close Finalized!';
+    document.getElementById('close-status-badge').textContent = 'Completed ✓';
+    document.getElementById('close-status-badge').className = 'badge badge-green';
+    document.getElementById('review-count').textContent = '0 ✓';
+    document.getElementById('start-close-btn').textContent = '✓ Completed';
+    setAIStatus('close-agent','Close finalized','All workflow steps completed',false); openAIModal('approval-modal');
+  }
+
+  // Chat / Advisor
+  const chatResponses = {
+    'Show me retention billing exposure across all Texas projects': `Here's your retention billing exposure for Texas (BuildCorp TX):\n\n📊 **Total Retention Held: $523,400** across 8 TX projects\n\n• Riverside Commercial: $187,200 (billable at 95% completion — recommend invoicing now)\n• I-35 Bridge: $142,000 (23% complete — not yet billable)\n• Westlake Office Park: $98,500 (billable in 30 days)\n• 5 other projects: $95,700 combined\n\n⚡ **Action:** $285,700 is eligible for release within 30 days. Shall I draft the retention invoices?`,
+    'Which subcontractors are over budget this month?': `Found **6 subcontractors over budget** this month:\n\n🔴 **Critical (>15% over):**\n• Martinez Electrical (Mesa Heights) — $34,200 over (+18%). Root cause: 3 change orders not pre-approved.\n• Peak Plumbing (Riverside) — $21,800 over (+16%). Extra work on HVAC reroute.\n\n🟡 **Watch (5-15% over):**\n• Ace Concrete, Summit Steel, Colorado Finishers, DryWall Pro\n\n💡 **Recommendation:** For Martinez Electrical, I found 2 unsigned change orders totaling $28,400. If approved, actual overage drops to just 3.4%. Want me to generate the change order approval forms?`,
+    'Compare gross margin across all 3 entities for Q3': `**Q3 Gross Margin by Entity:**\n\n📊 BuildCorp TX: **16.4%** (↑2.1% vs Q2) — Strong Riverside project performance\n📊 BuildCorp AZ: **12.8%** (↓1.3% vs Q2) — Mesa Heights material costs rising\n📊 BuildCorp CO: **8.1%** (↓3.2% vs Q2) — Downtown Office renovation underperforming\n\n**Consolidated: 14.2%** (target: 15%)\n\n⚠️ **Concern:** Colorado entity is dragging consolidated margin. The Downtown Office project alone has a -2% margin. Root cause: $45K in unanticipated asbestos remediation costs.\n\n💡 Want me to model scenarios for recovering margin in Q4?`,
+    'What are our compliance obligations for the Colorado entity this quarter?': `**BuildCorp CO — Q3 Compliance Obligations:**\n\n✅ **Completed:**\n• Colorado state contractor license renewal (done Aug 15)\n• Workers' comp insurance renewal (done Aug 22)\n• Q2 sales tax filing (done Jul 31)\n\n⏰ **Due This Quarter:**\n• **Sep 15:** Estimated state income tax payment (~$12,400)\n• **Sep 30:** OSHA 300 log update for Downtown Office site\n• **Oct 15:** Q3 payroll tax filing across 2 CO counties\n• **Oct 31:** Annual prevailing wage report (Denver public projects)\n\n⚠️ The prevailing wage report requires certified payroll records from the Downtown Office project. I see 3 weeks of timesheets still unverified. Shall I flag the site PM?`
+  };
+
+  function sendChat() {
+    const input = document.getElementById('chat-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    addChatMessage(msg, 'user');
+    // Show typing
+    const typingId = 'typing-' + Date.now();
+    setTimeout(() => {
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'chat-msg ai';
+      typingDiv.id = typingId;
+      typingDiv.innerHTML = '<div class="chat-avatar">N</div><div class="chat-bubble"><div class="thinking-visual" role="status" aria-label="Analyzing"><i></i><i></i><i></i><i></i><i></i></div></div>';
+      document.getElementById('chat-messages').appendChild(typingDiv);
+      scrollChat();
+
+      setTimeout(() => {
+        document.getElementById(typingId)?.remove();
+        const response = chatResponses[msg] || `I've analyzed your BuildCorp data across all 3 entities. Based on your query about "${msg}":\n\nI'd need to look deeper into the specific data. Let me pull the relevant reports from your IES Nexus data warehouse.\n\n💡 In the meantime, you can also connect with Sarah Mitchell (your CPA advisor) for expert guidance on this topic.\n\nWould you like me to schedule a session?`;
+        addChatMessage(response.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'), 'ai');
+      }, 1500);
+    }, 300);
+  }
+
+  function quickChat(msg) {
+    document.getElementById('chat-input').value = msg;
+    sendChat();
+  }
+
+  function addChatMessage(text, type) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg ' + type;
+    if (type === 'ai') {
+      div.innerHTML = '<div class="chat-avatar">N</div><div class="chat-bubble">' + text + '</div>';
+    } else {
+      div.innerHTML = '<div class="chat-avatar">PS</div><div class="chat-bubble">' + text + '</div>';
+    }
+    document.getElementById('chat-messages').appendChild(div);
+    scrollChat();
+  }
+
+  function scrollChat() {
+    const c = document.getElementById('chat-messages');
+    c.scrollTop = c.scrollHeight;
+  }
+
+  // Deploy Agent
+  function deployAgent() {
+    openAIModal('deploy-modal');
+  }
+
+  // Filter pills
+  document.querySelectorAll('.pill').forEach(p => {
+    p.addEventListener('click', () => {
+      document.querySelectorAll('.pill').forEach(pp => pp.classList.remove('active'));
+      p.classList.add('active');
+    });
+  });
+</script>
+
+<script>document.querySelectorAll(".nav-item").forEach(el=>{el.tabIndex=0;el.setAttribute("role","button");el.setAttribute("aria-label",el.innerText.trim());el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();el.click();}});});</script><script>
+let modalReturnFocus;
+function setAIStatus(page,title,detail,working){const el=document.querySelector('#page-'+page+' .ai-status');if(!el)return;el.classList.toggle('working',working);el.querySelector('strong').textContent=title;el.querySelector('small').textContent=detail;}
+const aiCopy={dashboard:['AI activity at a glance','Review agent updates and items that need your attention'],'close-agent':['Close Agent ready','Start the workflow to see AI checks and approval checkpoints'],advisor:['Ask your AI advisor','Explore the sample financials or connect with an expert'],builder:['Build with AI','Connect data, define checks, and review agent actions'],marketplace:['Extend your AI team','Explore specialist agents for your workflows']};
+
+function openAIModal(id){const el=document.getElementById(id);modalReturnFocus=document.activeElement;el.classList.remove('closing');el.hidden=false;el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');const title=el.querySelector('h2');if(title){title.id=id+'-title';el.setAttribute('aria-labelledby',title.id)}document.body.style.overflow='hidden';el.querySelector('button')?.focus();}
+function closeAIModal(id){const el=document.getElementById(id);el.classList.add('closing');setTimeout(()=>{el.hidden=true;el.classList.remove('closing');document.body.style.overflow='';modalReturnFocus?.focus();},matchMedia('(prefers-reduced-motion:reduce)').matches?0:240);}
+document.addEventListener('keydown',e=>{const el=document.querySelector('.modal-overlay:not([hidden])');if(!el)return;if(e.key==='Escape'){closeAIModal(el.id);return}if(e.key==='Tab'){const items=[...el.querySelectorAll('button,[href],input,select,[tabindex="0"]')];const first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
+</script><script>
+const topnav=document.createElement('nav');topnav.className='top-links';topnav.setAttribute('aria-label','Main navigation');
+[['dashboard','Command Center'],['close-agent','Close Agent'],['advisor','Advisor'],['builder','Agent Builder'],['marketplace','Marketplace']].forEach(([id,label])=>{const b=document.createElement('button');b.className='top-link'+(id==='dashboard'?' active':'');b.textContent=label;b.dataset.page=id;b.onclick=()=>showPage(id);topnav.append(b)});document.querySelector('.brand-header').append(topnav);
+const originalNavigation=showPage;showPage=function(id){originalNavigation(id);document.querySelectorAll('.top-link').forEach(b=>{b.classList.toggle('active',b.dataset.page===id);if(b.dataset.page===id)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')})};
+const sandboxTitle=[...document.querySelectorAll('#page-builder .card-title')].find(el=>el.textContent.includes('API Sandbox'));
+if(sandboxTitle){const card=sandboxTitle.closest('.card');const control=document.createElement('button');control.className='btn run-sandbox';control.textContent='Run sandbox test';const feedback=document.createElement('div');feedback.className='sandbox-feedback';feedback.hidden=true;feedback.setAttribute('role','status');sandboxTitle.after(control,feedback);control.onclick=()=>{control.disabled=true;control.textContent='Running checks…';feedback.hidden=false;feedback.classList.add('running');feedback.innerHTML='<strong>Connecting sample records</strong>Preparing workforce and project data';const stages=[['Checking workflow','Evaluating the configured rules against sample records'],['Preparing results','Collecting exceptions and proposed actions'],['Test complete','Demo response ready below. No live records were changed.']];stages.forEach((s,i)=>setTimeout(()=>{feedback.replaceChildren();const heading=document.createElement('strong');heading.textContent=s[0];feedback.append(heading,document.createTextNode(s[1]));if(i===2){feedback.classList.remove('running');control.disabled=false;control.textContent='Run test again'}},(i+1)*1100));};}
+</script><script>
+const loginForm=document.getElementById('login-form'),loginScreen=document.getElementById('login-screen');
+loginForm.addEventListener('submit',e=>{e.preventDefault();if(!loginForm.reportValidity())return;const error=document.getElementById('login-error');const email=document.getElementById('login-email');const password=document.getElementById('login-password');if(email.value !== 'pgp26.muditb@spjimr.org' || password.value !== 'mudit123'){error.textContent='Incorrect email or password. Please try again.';password.value='';password.focus();return;}error.textContent='';const button=loginForm.querySelector('button');button.disabled=true;button.innerHTML='<span class="login-spinner" aria-hidden="true"></span> Opening workspace…';loginForm.setAttribute('aria-busy','true');setTimeout(()=>{loginScreen.classList.add('departing');setTimeout(()=>{loginScreen.hidden=true;document.body.classList.remove('login-open');loginScreen.classList.remove('departing');loginForm.reset();button.disabled=false;button.textContent='Sign in';loginForm.removeAttribute('aria-busy');showPage('dashboard');const heading=document.querySelector('#page-dashboard h1');heading.tabIndex=-1;heading.focus({preventScroll:true});},matchMedia('(prefers-reduced-motion:reduce)').matches?0:300)},900)});
+const signout=document.createElement('button');signout.className='signout';signout.textContent='Sign out';signout.onclick=()=>{document.querySelectorAll('.modal-overlay').forEach(m=>m.hidden=true);document.body.style.overflow='';document.body.classList.add('login-open');loginScreen.hidden=false;window.scrollTo(0,0);document.getElementById('login-email').focus();};document.querySelector('.brand-header').append(signout);
+</script><div class="modal-overlay" id="expert-contact-modal" hidden><div class="modal"><h2 id="expert-contact-title"></h2><p id="expert-contact-description"></p><div id="expert-email-preview" hidden style="padding:16px;background:var(--primary-light);border-radius:8px;margin-bottom:20px;font-size:14px;"><strong>Subject: Advisory support for BuildCorp</strong><p style="margin:12px 0 0;color:var(--text);">Hi Sarah,<br><br>I’d like your guidance on our financials. Please let me know a convenient time to connect.<br><br>Thanks,<br>Priya</p></div><button class="btn btn-primary" onclick="closeAIModal('expert-contact-modal')">Done</button></div></div><script>function showExpertContact(channel){const copy={call:['Request a call','This is a demo expert profile. A contact number is needed to enable callback requests.'],email:['Email Sarah','Draft preview. Add the expert’s verified email address to enable sending.'],linkedin:['Connect on LinkedIn','Add the expert’s verified LinkedIn profile URL to enable this link.']};document.getElementById('expert-contact-title').textContent=copy[channel][0];document.getElementById('expert-contact-description').textContent=copy[channel][1];document.getElementById('expert-email-preview').hidden=channel!=='email';openAIModal('expert-contact-modal');}</script><button class="tour-launch" onclick="startTour()" aria-label="Start guided tour">Take a tour</button><section class="tour-card" id="prototype-tour" role="dialog" aria-label="Prototype guided tour" hidden><div class="tour-count" id="tour-count"></div><h2 id="tour-title"></h2><p id="tour-description"></p><div class="tour-controls"><button class="tour-skip" onclick="endTour()">Skip tour</button><button class="tour-back" id="tour-back" onclick="moveTour(-1)">Back</button><button class="tour-next" id="tour-next" onclick="moveTour(1)">Next</button></div></section><script>
+const tourSteps=[
+{page:'dashboard',selector:'.kpi-grid',title:'Your command center',description:'Start with revenue, cash, projects, and close progress. Agent activity below highlights updates and exceptions.'},
+{page:'close-agent',selector:'#start-close-btn',title:'Run the month-end close',description:'Start the close to watch each check progress. The workflow pauses when an exception needs your review.'},
+{page:'advisor',selector:'.chat-input-row',title:'Ask your advisor',description:'Enter a question about your financials, or use a Quick Query to explore a prepared example.'},
+{page:'advisor',selector:'.expert-tour-target',title:'Connect with an expert',description:'Request a call, preview an email, or view the LinkedIn contact option. These are demo contact actions.'},
+{page:'builder',selector:'.node-flow',title:'Explore the agent workflow',description:'Follow the connected stages from data ingestion to analysis, action, and reporting.'},
+{page:'builder',selector:'.run-sandbox',title:'Test with sample data',description:'Run a sandbox test to see staged checks and a sample response. No live records are changed.'},
+{page:'marketplace',selector:'.marketplace-grid',title:'Discover specialist agents',description:'Browse the sample marketplace. You can restart this guide at any time using Take a tour.'}
+];
+let tourIndex=0,tourTarget=null,tourActive=false;
+function positionTour(){if(!tourActive||!tourTarget)return;const card=document.getElementById('prototype-tour'),r=tourTarget.getBoundingClientRect();const width=card.offsetWidth,height=card.offsetHeight;let left=Math.max(12,Math.min(r.left,innerWidth-width-12));let top=r.bottom+16;if(top+height>innerHeight-12)top=r.top-height-16;if(top<12)top=Math.max(12,innerHeight-height-18);card.style.left=left+'px';card.style.top=top+'px';}
+function renderTour(){tourTarget?.classList.remove('tour-highlight');const step=tourSteps[tourIndex];showPage(step.page);tourTarget=document.querySelector('#page-'+step.page+' '+step.selector);const card=document.getElementById('prototype-tour');card.hidden=false;document.getElementById('tour-count').textContent='STEP '+(tourIndex+1)+' OF '+tourSteps.length;document.getElementById('tour-title').textContent=step.title;document.getElementById('tour-description').textContent=step.description;document.getElementById('tour-back').disabled=tourIndex===0;document.getElementById('tour-next').textContent=tourIndex===tourSteps.length-1?'Finish':'Next';if(tourTarget){tourTarget.classList.add('tour-highlight');tourTarget.scrollIntoView({behavior:'instant',block:'center'});}positionTour();document.getElementById('tour-next').focus({preventScroll:true});}
+function startTour(){tourIndex=0;tourActive=true;renderTour();}function moveTour(delta){if(tourIndex+delta>=tourSteps.length){endTour();return;}tourIndex=Math.max(0,tourIndex+delta);renderTour();}function endTour(){tourActive=false;tourTarget?.classList.remove('tour-highlight');document.getElementById('prototype-tour').hidden=true;document.querySelector('.tour-launch').focus({preventScroll:true});}
+window.addEventListener('resize',positionTour);window.addEventListener('scroll',positionTour,{passive:true});document.addEventListener('keydown',e=>{if(tourActive&&e.key==='Escape')endTour();});document.querySelector('.signout').addEventListener('click',()=>{if(tourActive)endTour();});
+</script></body></html>
+
+
+
